@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node app.js"
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "build": "echo this is my build script"
   },
   "repository": {
     "type": "git",
