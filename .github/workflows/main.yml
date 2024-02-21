@@ -35,3 +35,4 @@ jobs:
           remote_host: 18.193.216.240
           remote_user: ubuntu
           remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
+
