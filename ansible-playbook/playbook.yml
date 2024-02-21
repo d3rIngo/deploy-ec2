@@ -1,0 +1,71 @@
+---
+- name: Konfiguriere EC2-Instanz mit NGINX und Node.js-Anwendung
+  hosts: ec2
+  become: true
+  tasks:
+    - name: Installiere NGINX
+      apt:
+        name: nginx
+        state: present
+
+    - name: Erlaube HTTP- und HTTPS-Verbindungen für NGINX
+      command: ufw allow 'Nginx Full'
+
+    - name: Kopiere NGINX-Konfigurationsdatei für die Anwendung
+      template:
+        src: templates/my-app.conf.j2
+        dest: /etc/nginx/sites-available/my-app
+      notify: Restart NGINX
+
+    - name: Aktiviere NGINX-Konfiguration für die Anwendung
+      command: ln -s /etc/nginx/sites-available/my-app /etc/nginx/sites-enabled
+
+    - name: Erstelle Verzeichnis für die Anwendung
+      file:
+        path: /var/www/my-app
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Ändere die Gruppenzugehörigkeit des Verzeichnisses
+      file:
+        path: /var/www
+        state: directory
+        owner: root
+        group: www-data
+        mode: '0775'
+
+    - name: Füge meinen Benutzer zur www-data-Gruppe hinzu
+      user:
+        name: my_username
+        groups: www-data
+        append: yes
+
+    - name: Installiere Git
+      apt:
+        name: git
+        state: present
+
+    - name: Klone GitHub-Repository
+      git:
+        repo: "https://github.com/d3rIngo/deploy-ec2.git"
+        dest: "/var/www/my-app"
+        update: yes
+
+    - name: Installiere Node.js via NVM
+      shell: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+        source ~/.bashrc
+        nvm install 14
+
+    - name: Installiere PM2
+      npm:
+        name: pm2
+        global: yes
+
+  handlers:
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
